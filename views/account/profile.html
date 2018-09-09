@@ -1,0 +1,171 @@
+{{ extend '../_layout/mater.html' }}
+
+<!-- 标题 -->
+{{ block 'title' }}个人信息{{ /block }}
+
+<!-- css -->
+{{ block 'css' }}
+<link href="https://cdn.bootcss.com/flatpickr/4.5.0/flatpickr.min.css" rel="stylesheet">
+{{ /block }}
+
+<!-- 主体 -->
+{{ block 'content' }}
+
+<!-- 导航 -->
+{{ include '../_component/nav.html' }}
+
+<div class="container pt-3">
+	<div class="row">
+		<div class="col-md-4 px-0">
+			<div class="list-group">
+				<a href="#" class="list-group-item list-group-item-action active">基本信息</a>
+			</div>
+		</div>
+		<div class="col-md-8 pr-0">
+			<form class="profile-form" enctype="multipart/form-data">
+				<div class="form-group row">
+					<label for="email" class="col-md-2 text-md-right col-form-label">账号</label>
+					<div class="col-md-9">
+						<input type="text" name="email" class="form-control" id="email" disabled
+						       value="{{ user.email }}">
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="nickname" class="col-md-2 text-md-right col-form-label">昵称</label>
+					<div class="col-md-9">
+						<input type="text" name="nickname" class="form-control" id="nickname"
+						       value="{{ user.nickname }}">
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="birthday" class="col-md-2 text-md-right col-form-label">生日</label>
+					<div class="col-md-9">
+						<input type="text" name="birthday" class="form-control" id="birthday"
+						       value="{{ user.birthday }}">
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-md-2 text-md-right col-form-label">性别</label>
+					<div class="col-md-9 d-flex align-items-center">
+						<div class="custom-control custom-radio custom-control-inline">
+							<input type="radio" value="0" id="gender0" name="gender" class="custom-control-input" {{
+							       user.gender !=-1 ? user.gender== 0 ? 'checked' : '' : '' }}>
+							<label class="custom-control-label" for="gender0">男</label>
+						</div>
+						<div class="custom-control custom-radio custom-control-inline">
+							<input type="radio" value="1" id="gender1" name="gender" class="custom-control-input" {{
+							       user.gender !=-1 ? user.gender== 1 ? 'checked' : '' : '' }}>
+							<label class="custom-control-label" for="gender1">女</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="bio" class="col-md-2 text-md-right col-form-label">简介</label>
+					<div class="col-md-9">
+						<textarea name="bio" id="bio" cols="30" rows="5" class="form-control">{{ user.bio != '' ? user.bio : '' }}</textarea>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-md-2 text-md-right col-form-label">头像</label>
+					<div class="col-md-9 d-flex align-items-center flex-wrap">
+						<div>
+							{{ if user.avatar == '/public/img/default-avatar.png' }}
+							<img style="width: 100px; height: 100px;" src="{{ user.avatar }}" alt="">
+							{{ else }}
+							<img style="width: 100px; height: 100px;" src="/upload/{{ user.avatar }}" alt="">
+							{{ /if }}
+						</div>
+						<div class="custom-file d-block mt-3">
+							<input type="file" name="avatar" class="custom-file-input" id="customFile">
+							<label class="custom-file-label file-name" for="customFile">选择文件</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-md-2 text-md-right col-form-label"></label>
+					<div class="col-md-9 d-flex">
+						<button class="btn btn-primary btn-sm save-profile" type="button">保存</button>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-md-2 text-md-right col-form-label"></label>
+					<div class="col-md-9">
+						<div class="alert alert-success mt-3 mb-3 save-profile-error" style="visibility: hidden; height: 50px;"></div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+{{ /block }}
+
+{{ block 'js' }}
+<script src="https://cdn.bootcss.com/flatpickr/4.5.0/flatpickr.min.js"></script>
+<script>
+    const event = {
+        initEvent: () => {
+            flatpickr($('input[name="birthday"]').get(0), {});
+            $('.save-profile').click(event.saveProfile);
+            $('input[name="avatar"]').on('change', event.changeFile);
+        },
+        changeFile: () => {
+            let fileName = $('input[name="avatar"]').get(0).files[0].name;
+            $('.file-name').html(fileName);
+        },
+        saveProfile: async () => {
+            if ($('.save-profile').hasClass('disabled')) {
+                return;
+            }
+            let fd = new FormData();
+            fd.append('nickname', $('input[name="nickname"]').val());
+            if ($('input[name="birthday"]').val() !== '') {
+                fd.append('birthday', new Date($('input[name="birthday"]').val()).getTime());
+            }
+            if ($('input[name="gender"]:checked').val() !== undefined) {
+                fd.append('gender', $('input[name="gender"]:checked').val());
+            }
+            fd.append('bio', $('textarea[name="bio"]').val());
+            if ($('input[name="avatar"]').get(0).files[0] !== undefined) {
+                fd.append('avatar', $('input[name="avatar"]').get(0).files[0]);
+            }
+
+            try {
+                let result = await $.ajax({
+                    method: 'POST',
+                    url: '/account/setting/profile',
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    beforeSend: (xhr) => {
+                        $('.save-profile-error').css('visibility', 'hidden');
+                        $('.save-profile').addClass('disabled');
+                    }
+                });
+                setTimeout(() => {
+                    $('.save-profile').removeClass('disabled');
+                    if (result.errorCode === '0') {
+                        $('.save-profile-error')
+                            .removeClass('alert-danger').addClass('alert-success')
+                            .css('visibility', 'visible')
+                            .html(result.errorMessage);
+                    } else {
+                        $('.save-profile-error')
+                            .removeClass('alert-success').addClass('alert-danger')
+                            .css('visibility', 'visible')
+                            .html(result.errorMessage);
+                    }
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                }, 233);
+            } catch (exception) {
+                alert(exception.statusText);
+            }
+        }
+    };
+
+    event.initEvent();
+</script>
+{{ /block }}

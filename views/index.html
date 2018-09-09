@@ -1,0 +1,28 @@
+{{ extend './_layout/mater.html' }}
+
+<!-- 标题 -->
+{{ block 'title' }}index{{ /block }}
+
+{{ block 'css' }}
+<style>
+	.list .material-icons {
+		font-size: 50px;
+	}
+
+	.list h5 {
+		font-weight: initial;
+	}
+</style>
+{{ /block }}
+
+<!-- 主体 -->
+{{ block 'content' }}
+
+<!-- 导航 -->
+{{ include './_component/nav.html' }}
+
+<div class="container pt-3">
+	<div class="jumbotron">Hello World</div>
+</div>
+
+{{ /block }}
