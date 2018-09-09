@@ -42,8 +42,8 @@ app.use(session({
 }));
 
 // 路由
-app.use(require('./routes/index'));
-app.use(require('./routes/account'));
+app.use(require('../routes/index'));
+app.use(require('../routes/account'));
 
 // 启动服务端
 app.listen(3000, () => {
